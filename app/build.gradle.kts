@@ -80,11 +80,13 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.codegen)
     implementation(libs.moshi.adapters)
     implementation(libs.logginginterceptor)
 
     //Room
     implementation(libs.room.ktx)
+    implementation(libs.room.paging)
     ksp(libs.room.ksp)
 
     //Glide

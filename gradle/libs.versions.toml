@@ -37,11 +37,13 @@ retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = 
 retrofit-converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { group = "com.squareup.moshi", name = "moshi-adapters", version.ref = "moshi" }
+moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 logginginterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version = "5.1.0" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 landscapist-glide = {group = "com.github.skydoves", name = "landscapist-glide", version = "2.5.2"}
 room-ktx = {group = "androidx.room", name = "room-ktx", version.ref = "room"}
+room-paging = {group = "androidx.room", name = "room-paging", version.ref = "room"}
 room-ksp = {group = "androidx.room", name = "room-compiler", version.ref = "room"}
 
 [plugins]

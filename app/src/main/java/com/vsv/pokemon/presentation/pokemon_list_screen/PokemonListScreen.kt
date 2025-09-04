@@ -1,5 +1,6 @@
 package com.vsv.pokemon.presentation.pokemon_list_screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,10 @@ fun PokemonListScreen(
             pullToRefreshState.animateToHidden()
         }
     }
+    BackHandler(state.searchQuery.isNotEmpty() || state.isFiltersApplied) {
+        onEvent(PokemonListScreenEvent.ClearFilters)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

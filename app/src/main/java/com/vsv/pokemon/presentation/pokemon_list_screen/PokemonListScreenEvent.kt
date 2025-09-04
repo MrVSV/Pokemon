@@ -9,5 +9,6 @@ sealed interface PokemonListScreenEvent {
     data class OnSortParamChange(val param: SortParam): PokemonListScreenEvent
     data class OnPokemonTypeSelected(val type: PokemonTypeUiModel): PokemonListScreenEvent
     data object OnApplyFilters: PokemonListScreenEvent
+    data object ClearFilters: PokemonListScreenEvent
 
 }

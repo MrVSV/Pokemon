@@ -39,6 +39,7 @@ class PokemonListScreenViewModel(
             is PokemonListScreenEvent.OnSortParamChange -> selectSortParam(event.param)
             is PokemonListScreenEvent.OnPokemonTypeSelected -> selectPokemonType(event.type)
             PokemonListScreenEvent.OnApplyFilters -> onApplyFilters()
+            PokemonListScreenEvent.ClearFilters -> clearFilters()
         }
     }
 
@@ -117,5 +118,18 @@ class PokemonListScreenViewModel(
                 )
             }
         }
+    }
+
+    private fun clearFilters(){
+        _state.update {
+            it.copy(
+                searchQuery = "",
+                sortParam = SortParam.DEFAULT,
+                pokemonTypes = it.pokemonTypes.map { type ->
+                    type.copy(isSelected = false)
+                }
+            )
+        }
+        onApplyFilters()
     }
 }

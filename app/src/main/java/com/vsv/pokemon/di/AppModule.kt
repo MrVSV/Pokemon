@@ -5,6 +5,8 @@ import com.vsv.pokemon.data.local_db.PokemonDataBase
 import com.vsv.pokemon.data.remote_api.PokemonApi
 import com.vsv.pokemon.data.repository.PokemonRepositoryImpl
 import com.vsv.pokemon.domain.repository.PokemonRepository
+import com.vsv.pokemon.domain.utils.BASE_URL
+import com.vsv.pokemon.domain.utils.TIMEOUT_SECONDS
 import com.vsv.pokemon.presentation.pokemon_list_screen.PokemonListScreenViewModel
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -14,9 +16,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.create
 import java.util.concurrent.TimeUnit
-
-const val BASE_URL = "https://pokeapi.co/api/v2/"
-const val TIMEOUT_SECONDS = 20L
 
 val appModule = module {
 

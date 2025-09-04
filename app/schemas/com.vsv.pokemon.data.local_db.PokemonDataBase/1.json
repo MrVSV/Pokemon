@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4efcbb11eeb431f34255e5d4e9326210",
+    "identityHash": "6cc56083b93baa2b8330dece66008a3a",
     "entities": [
       {
         "tableName": "pokemons",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `color` TEXT, `image` TEXT NOT NULL, PRIMARY KEY(`name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `image` TEXT NOT NULL, `order` INTEGER NOT NULL, `height` INTEGER NOT NULL, `weight` INTEGER NOT NULL, PRIMARY KEY(`name`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -15,14 +15,27 @@
             "notNull": true
           },
           {
-            "fieldPath": "color",
-            "columnName": "color",
-            "affinity": "TEXT"
-          },
-          {
             "fieldPath": "image",
             "columnName": "image",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "order",
+            "columnName": "order",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weight",
+            "columnName": "weight",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -36,7 +49,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4efcbb11eeb431f34255e5d4e9326210')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6cc56083b93baa2b8330dece66008a3a')"
     ]
   }
 }

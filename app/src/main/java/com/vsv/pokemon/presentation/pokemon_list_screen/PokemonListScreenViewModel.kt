@@ -6,11 +6,10 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.vsv.pokemon.domain.mappers.toUiModel
-import com.vsv.pokemon.domain.model.onError
-import com.vsv.pokemon.domain.model.onSuccess
+import com.vsv.pokemon.domain.model.SortParam
 import com.vsv.pokemon.domain.repository.PokemonRepository
-import com.vsv.pokemon.presentation.ui_model.LoadingStatus
 import com.vsv.pokemon.presentation.ui_model.PokemonUiModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -32,8 +31,9 @@ class PokemonListScreenViewModel(
     fun onEvent(event: PokemonListScreenEvent) {
         when (event) {
             PokemonListScreenEvent.GetPokemons -> getPokemons()
-            is PokemonListScreenEvent.GetPokemonSpecies -> getPokemonSpecies(event.pokemonName)
             is PokemonListScreenEvent.OnSearchValueChange -> onSearchQueryChange(event.query)
+            is PokemonListScreenEvent.OnSortParamChange -> selectSortParam(event.param)
+            PokemonListScreenEvent.OnApplyFilters -> onApplyFilters()
         }
     }
 
@@ -45,61 +45,37 @@ class PokemonListScreenViewModel(
         }
     }
 
-    private fun getPokemonSpecies(pokemonName: String) {
-        viewModelScope.launch {
-            _pokemonPagingData.update { data ->
-                data.map { pokemon ->
-                    if (pokemon.name == pokemonName) {
-                        pokemon.copy(
-                            color = null,
-                            loadingStatus = LoadingStatus.LOADING
-                        )
-                    } else {
-                        pokemon
-                    }
-                }
+    private fun onSearchQueryChange(query: String) {
+        _state.update { it.copy(searchQuery = query) }
+        viewModelScope.launch(Dispatchers.IO) {
+            _state.update {
+                it.copy(
+                    pokemonsList = pokemonRepository.filterPokemons(query, it.sortParam)
+                        .map { pokemon ->
+                            pokemon.toUiModel()
+                        }
+                )
             }
-            pokemonRepository.getPokemonSpecies(pokemonName)
-                .onSuccess { pokemon ->
-                    val newPokemon = pokemon.toUiModel()
-                    _pokemonPagingData.update { data ->
-                        data.map {
-                            if (it.name == pokemonName) {
-                                it.copy(
-                                    color = newPokemon.color,
-                                    loadingStatus = LoadingStatus.SUCCESS
-                                )
-                            } else {
-                                it
-                            }
-                        }
-                    }
-                }
-                .onError {
-                    _pokemonPagingData.update { data ->
-                        data.map { pokemon ->
-                            if (pokemon.name == pokemonName) {
-                                pokemon.copy(
-                                    color = null,
-                                    loadingStatus = LoadingStatus.ERROR
-                                )
-                            } else {
-                                pokemon
-                            }
-                        }
-                    }
-                }
         }
     }
 
-    private fun onSearchQueryChange(query: String) {
-        _state.update { it.copy(searchQuery = query) }
-        viewModelScope.launch {
+    private fun selectSortParam(param: SortParam) {
+        _state.update {
+            it.copy(
+                sortParam = if (it.sortParam == param) SortParam.DEFAULT else param
+            )
+        }
+    }
+
+    private fun onApplyFilters() {
+        viewModelScope.launch(Dispatchers.IO) {
             _state.update {
                 it.copy(
-                    pokemonsList = pokemonRepository.searchPokemon(query).map { pokemon ->
-                        pokemon.toUiModel().copy(loadingStatus = LoadingStatus.SUCCESS)
-                    }
+                    pokemonsList = pokemonRepository.filterPokemons(it.searchQuery, it.sortParam)
+                        .map { pokemon ->
+                            pokemon.toUiModel()
+                        },
+                    isFiltersApplied = it.sortParam != SortParam.DEFAULT
                 )
             }
         }

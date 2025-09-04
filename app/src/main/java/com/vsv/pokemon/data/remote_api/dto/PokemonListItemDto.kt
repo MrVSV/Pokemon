@@ -1,4 +1,4 @@
-package com.vsv.pokemon.data.remote_api
+package com.vsv.pokemon.data.remote_api.dto
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -9,15 +9,14 @@ data class PokemonListResponse(
     val count: Int,
     val next: String?,
     val previous: String?,
-    val results: List<PokemonDto>
+    val results: List<PokemonListItemDto>
 )
 
 
 @JsonClass(generateAdapter = true)
-data class PokemonDto(
+data class PokemonListItemDto(
     val name: String,
     val url: String?,
-    val color: PokemonColorDto?,
 )
 
 @JsonClass(generateAdapter = true)

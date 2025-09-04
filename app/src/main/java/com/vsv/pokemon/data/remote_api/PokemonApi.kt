@@ -1,5 +1,7 @@
 package com.vsv.pokemon.data.remote_api
 
+import com.vsv.pokemon.data.remote_api.dto.PokemonDto
+import com.vsv.pokemon.data.remote_api.dto.PokemonListResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -12,8 +14,8 @@ interface PokemonApi {
         @Query("offset") offset: Int
     ): PokemonListResponse
 
-    @GET("pokemon-species/{name}/")
-    suspend fun getPokemonSpecies(
+    @GET("pokemon/{name}/")
+    suspend fun getPokemonDetails(
         @Path("name") name: String
     ): PokemonDto
 

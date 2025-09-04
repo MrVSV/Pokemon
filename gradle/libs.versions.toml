@@ -13,6 +13,7 @@ retrofit = "3.0.0"
 moshi = "1.15.2"
 koin = "4.1.0"
 room = "2.7.2"
+paletteKtx = "1.0.0"
 
 
 [libraries]
@@ -45,6 +46,7 @@ landscapist-glide = {group = "com.github.skydoves", name = "landscapist-glide", 
 room-ktx = {group = "androidx.room", name = "room-ktx", version.ref = "room"}
 room-paging = {group = "androidx.room", name = "room-paging", version.ref = "room"}
 room-ksp = {group = "androidx.room", name = "room-compiler", version.ref = "room"}
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

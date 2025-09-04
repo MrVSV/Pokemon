@@ -7,29 +7,23 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import com.vsv.pokemon.data.local_db.PokemonDataBase
 import com.vsv.pokemon.data.remote_api.PokemonApi
-import com.vsv.pokemon.data.remote_api.safeCall
-import com.vsv.pokemon.domain.mappers.toEntity
 import com.vsv.pokemon.domain.mappers.toModel
 import com.vsv.pokemon.domain.model.PokemonModel
-import com.vsv.pokemon.domain.model.Result
-import com.vsv.pokemon.domain.model.errors.RemoteError
-import com.vsv.pokemon.domain.model.map
-import com.vsv.pokemon.domain.model.onSuccess
+import com.vsv.pokemon.domain.model.SortParam
 import com.vsv.pokemon.domain.repository.PokemonRepository
-import kotlinx.coroutines.Dispatchers
+import com.vsv.pokemon.domain.utils.LIMIT
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 class PokemonRepositoryImpl(
     private val pokemonApi: PokemonApi,
     private val pokemonDB: PokemonDataBase
-): PokemonRepository {
+) : PokemonRepository {
 
     @OptIn(ExperimentalPagingApi::class)
     override suspend fun getPokemonList(): Flow<PagingData<PokemonModel>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = PagingConfig(pageSize = LIMIT),
             remoteMediator = PokemonRemoteMediator(pokemonDB, pokemonApi),
             pagingSourceFactory = { pokemonDB.pokemonDao().getPokemons() }
         ).flow.map {
@@ -39,19 +33,14 @@ class PokemonRepositoryImpl(
         }
     }
 
-    override suspend fun getPokemonSpecies(pokemonName: String): Result<PokemonModel, RemoteError> {
-        val resp = safeCall {  pokemonApi.getPokemonSpecies(pokemonName)}.onSuccess {
-            withContext(Dispatchers.IO) {
-                val savedPokemon = pokemonDB.pokemonDao().getPokemonByName(pokemonName)
-                val image = savedPokemon?.image ?: ""
-                pokemonDB.pokemonDao().insertPokemon(it.toEntity(image))
-            }
-        }
-        return resp.map { it.toModel() }
-
-    }
-
     override suspend fun searchPokemon(searchQuery: String): List<PokemonModel> {
         return pokemonDB.pokemonDao().searchPokemons(searchQuery).map { it.toModel() }
+    }
+
+    override suspend fun filterPokemons(
+        searchQuery: String,
+        sortParam: SortParam
+    ): List<PokemonModel> {
+        return pokemonDB.pokemonDao().getPokemonsWithQuery(searchQuery, sortParam).map { it.toModel() }
     }
 }

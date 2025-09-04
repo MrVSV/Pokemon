@@ -4,6 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
+import androidx.room.withTransaction
 import com.vsv.pokemon.data.local_db.PokemonDataBase
 import com.vsv.pokemon.data.local_db.PokemonEntity
 import com.vsv.pokemon.data.local_db.PokemonTypeCrossRef
@@ -34,23 +35,27 @@ class PokemonRemoteMediator(
         return try {
             val response = pokemonApi.getPokemonList(LIMIT, offset!!)
             val pokemonDetailsList = mutableListOf<PokemonDto>()
-            response.results.asyncMap { pokemon ->
-                safeCall { pokemonApi.getPokemonDetails(pokemon.name) }
-                    .onSuccess { data ->
-                        pokemonDetailsList.add(data)
-                    }
-            }
-            pokemonDB.pokemonDao().insertAllPokemons(pokemonDetailsList.map { it.toEntity() })
-            pokemonDetailsList.forEach { pokemon ->
-                pokemon.types.forEach { type ->
-                    pokemonDB.pokemonDao().insertPokemonTypeCrossRef(
-                        PokemonTypeCrossRef(
-                            pokemon.name,
-                            type.type.name
-                        )
-                    )
+            response.results
+                .asyncMap { pokemon ->
+                    safeCall { pokemonApi.getPokemonDetails(pokemon.name) }
+                        .onSuccess { data ->
+                            pokemonDetailsList.add(data)
+                        }
                 }
-            }
+                pokemonDB.withTransaction{
+                    pokemonDB.pokemonDao()
+                        .insertAllPokemons(pokemonDetailsList.map { it.toEntity() })
+                    pokemonDetailsList.forEach { pokemon ->
+                        pokemon.types.forEach { type ->
+                            pokemonDB.pokemonDao().insertPokemonTypeCrossRef(
+                                PokemonTypeCrossRef(
+                                    pokemon.name,
+                                    type.type.name
+                                )
+                            )
+                        }
+                    }
+                }
             MediatorResult.Success(endOfPaginationReached = response.next == null)
         } catch (e: Exception) {
             e.printStackTrace()

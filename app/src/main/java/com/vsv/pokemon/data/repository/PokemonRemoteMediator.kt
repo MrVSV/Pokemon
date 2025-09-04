@@ -6,15 +6,14 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.vsv.pokemon.data.local_db.PokemonDataBase
 import com.vsv.pokemon.data.local_db.PokemonEntity
+import com.vsv.pokemon.data.local_db.PokemonTypeCrossRef
 import com.vsv.pokemon.data.remote_api.PokemonApi
+import com.vsv.pokemon.data.remote_api.dto.PokemonDto
 import com.vsv.pokemon.data.remote_api.safeCall
 import com.vsv.pokemon.domain.mappers.toEntity
-import com.vsv.pokemon.domain.model.onError
 import com.vsv.pokemon.domain.model.onSuccess
 import com.vsv.pokemon.domain.utils.LIMIT
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import com.vsv.pokemon.domain.utils.asyncMap
 
 @OptIn(ExperimentalPagingApi::class)
 class PokemonRemoteMediator(
@@ -34,31 +33,30 @@ class PokemonRemoteMediator(
         } ?: return MediatorResult.Success(true)
         return try {
             val response = pokemonApi.getPokemonList(LIMIT, offset!!)
-            pokemonDB.pokemonDao().insertAllPokemons(
-                response.results.asyncMap { pokemon ->
-                    lateinit var pokemonDetails: PokemonEntity
-                    safeCall { pokemonApi.getPokemonDetails(pokemon.name) }
-                        .onSuccess { data ->
-                            pokemonDetails = data.toEntity()
-                        }
-                        .onError {
-                            pokemonDetails = pokemon.toEntity()
-                        }
-                    pokemonDetails
+            val pokemonDetailsList = mutableListOf<PokemonDto>()
+            response.results.asyncMap { pokemon ->
+                safeCall { pokemonApi.getPokemonDetails(pokemon.name) }
+                    .onSuccess { data ->
+                        pokemonDetailsList.add(data)
+                    }
+            }
+            pokemonDB.pokemonDao().insertAllPokemons(pokemonDetailsList.map { it.toEntity() })
+            pokemonDetailsList.forEach { pokemon ->
+                pokemon.types.forEach { type ->
+                    pokemonDB.pokemonDao().insertPokemonTypeCrossRef(
+                        PokemonTypeCrossRef(
+                            pokemon.name,
+                            type.type.name
+                        )
+                    )
                 }
-            )
+            }
             MediatorResult.Success(endOfPaginationReached = response.next == null)
         } catch (e: Exception) {
+            e.printStackTrace()
             MediatorResult.Error(e)
         }
     }
 
 }
 
-private suspend fun <T, R> List<T>.asyncMap(transform: suspend (T) -> R): List<R> {
-    return coroutineScope {
-        this@asyncMap.map { item ->
-            async { transform(item) }
-        }.awaitAll()
-    }
-}

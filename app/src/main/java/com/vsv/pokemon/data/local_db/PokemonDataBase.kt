@@ -5,10 +5,10 @@ import androidx.room.RoomDatabase
 
 
 @Database(
-    entities = [PokemonEntity::class],
+    entities = [PokemonEntity::class, PokemonTypeEntity::class, PokemonTypeCrossRef::class],
     version = 1,
 )
 abstract class PokemonDataBase : RoomDatabase() {
     abstract fun pokemonDao(): PokemonDao
-
+    abstract fun pokemonTypeDao(): PokemonTypeDao
 }

@@ -16,14 +16,7 @@ suspend inline fun <reified T> safeCall(
     return try {
         Result.Success(execute.invoke())
     } catch (e: HttpException) {
-        when (e.code()) {
-            in 200..299 -> {
-                try {
-                    Result.Success(execute())
-                } catch (e: JsonDataException) {
-                    Result.Error(RemoteError.SERIALIZATION)
-                }
-            }
+        return when (e.code()) {
             404 -> {
                 Result.Error(RemoteError.NOT_FOUND)
             }
@@ -40,6 +33,9 @@ suspend inline fun <reified T> safeCall(
         return Result.Error(RemoteError.NO_INTERNET)
     } catch (e: UnknownHostException) {
         return Result.Error(RemoteError.NO_INTERNET)
+    } catch (e: JsonDataException) {
+        e.printStackTrace()
+        return Result.Error(RemoteError.SERIALIZATION)
     } catch (e: Exception) {
         coroutineContext.ensureActive()
         return Result.Error(RemoteError.UNKNOWN)

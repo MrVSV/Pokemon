@@ -5,5 +5,11 @@ enum class SortParam(val columnName: String) {
     NAME("name"),
     ORDER("order"),
     HEIGHT("height"),
-    WEIGHT("weight")
+    WEIGHT("weight"),
+    HP("hp"),
+    ATTACK("attack"),
+    DEFENSE("defense"),
+    SPECIAL_ATTACK("special_attack"),
+    SPECIAL_DEFENSE("special_defense"),
+    SPEED("speed"),
 }

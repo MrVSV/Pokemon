@@ -18,8 +18,3 @@ data class PokemonListItemDto(
     val name: String,
     val url: String?,
 )
-
-@JsonClass(generateAdapter = true)
-data class PokemonColorDto(
-    val name: String
-)

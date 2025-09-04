@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.ui.graphics.Color
 import androidx.palette.graphics.Palette
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 fun calcDominantColor(drawable: BitmapDrawable, onFinish: (Color) -> Unit) {
     val bmp = drawable.bitmap.copy(Bitmap.Config.ARGB_8888, true)
@@ -12,5 +15,13 @@ fun calcDominantColor(drawable: BitmapDrawable, onFinish: (Color) -> Unit) {
         palette?.dominantSwatch?.rgb?.let { colorValue ->
             onFinish(Color(colorValue))
         }
+    }
+}
+
+suspend fun <T, R> List<T>.asyncMap(transform: suspend (T) -> R): List<R> {
+    return coroutineScope {
+        this@asyncMap.map { item ->
+            async { transform(item) }
+        }.awaitAll()
     }
 }

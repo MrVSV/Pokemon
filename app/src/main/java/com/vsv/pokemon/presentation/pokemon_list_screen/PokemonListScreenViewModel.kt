@@ -6,8 +6,12 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.vsv.pokemon.domain.mappers.toUiModel
+import com.vsv.pokemon.domain.model.LoadingStatus
 import com.vsv.pokemon.domain.model.SortParam
+import com.vsv.pokemon.domain.model.onError
+import com.vsv.pokemon.domain.model.onSuccess
 import com.vsv.pokemon.domain.repository.PokemonRepository
+import com.vsv.pokemon.presentation.ui_model.PokemonTypeUiModel
 import com.vsv.pokemon.presentation.ui_model.PokemonUiModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,15 +34,35 @@ class PokemonListScreenViewModel(
 
     fun onEvent(event: PokemonListScreenEvent) {
         when (event) {
-            PokemonListScreenEvent.GetPokemons -> getPokemons()
+            PokemonListScreenEvent.GetPokemons -> getPokemonTypes()
             is PokemonListScreenEvent.OnSearchValueChange -> onSearchQueryChange(event.query)
             is PokemonListScreenEvent.OnSortParamChange -> selectSortParam(event.param)
+            is PokemonListScreenEvent.OnPokemonTypeSelected -> selectPokemonType(event.type)
             PokemonListScreenEvent.OnApplyFilters -> onApplyFilters()
         }
     }
 
+    private fun getPokemonTypes() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _state.update { it.copy(loadingStatus = LoadingStatus.LOADING) }
+            pokemonRepository.getPokemonTypes()
+                .onSuccess { types ->
+                    _state.update {
+                        it.copy(
+                            pokemonTypes = types.map { type -> type.toUiModel() },
+                            loadingStatus = LoadingStatus.SUCCESS
+                        )
+                    }
+                    getPokemons()
+                }
+                .onError {
+                    _state.update { it.copy(loadingStatus = LoadingStatus.ERROR) }
+                }
+        }
+    }
+
     private fun getPokemons() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             pokemonRepository.getPokemonList().cachedIn(viewModelScope).collect {
                 _pokemonPagingData.value = it.map { pokemon -> pokemon.toUiModel() }
             }
@@ -47,16 +71,7 @@ class PokemonListScreenViewModel(
 
     private fun onSearchQueryChange(query: String) {
         _state.update { it.copy(searchQuery = query) }
-        viewModelScope.launch(Dispatchers.IO) {
-            _state.update {
-                it.copy(
-                    pokemonsList = pokemonRepository.filterPokemons(query, it.sortParam)
-                        .map { pokemon ->
-                            pokemon.toUiModel()
-                        }
-                )
-            }
-        }
+        onApplyFilters()
     }
 
     private fun selectSortParam(param: SortParam) {
@@ -67,18 +82,40 @@ class PokemonListScreenViewModel(
         }
     }
 
+    private fun selectPokemonType(type: PokemonTypeUiModel) {
+        _state.update {
+            it.copy(
+                pokemonTypes = it.pokemonTypes.map { pokemonType ->
+                    if (pokemonType.name == type.name) {
+                        pokemonType.copy(isSelected = !pokemonType.isSelected)
+                    } else {
+                        pokemonType
+                    }
+                }
+            )
+        }
+    }
+
     private fun onApplyFilters() {
         viewModelScope.launch(Dispatchers.IO) {
             _state.update {
                 it.copy(
-                    pokemonsList = pokemonRepository.filterPokemons(it.searchQuery, it.sortParam)
-                        .map { pokemon ->
-                            pokemon.toUiModel()
-                        },
-                    isFiltersApplied = it.sortParam != SortParam.DEFAULT
+                    pokemonsList = pokemonRepository.filterPokemons(
+                        searchQuery = it.searchQuery,
+                        sortParam = it.sortParam,
+                        types = if (it.pokemonTypes.all { type -> !type.isSelected }) {
+                            it.pokemonTypes
+                                .map { type -> type.name }
+                        } else {
+                            it.pokemonTypes.filter { type -> type.isSelected }
+                                .map { type -> type.name }
+                        }
+                    ).map { pokemon ->
+                        pokemon.toUiModel()
+                    },
+                    isFiltersApplied = it.pokemonTypes.any { type -> type.isSelected } || it.sortParam != SortParam.DEFAULT
                 )
             }
         }
     }
-
 }
